@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -58,6 +59,7 @@ fun LoginScreen() {
                 .fillMaxWidth(),
         )
         OutlinedTextField(value = contrasenya,
+
             onValueChange = { contrasenya = it },
             label = { Text("Contraseña") }
         )
