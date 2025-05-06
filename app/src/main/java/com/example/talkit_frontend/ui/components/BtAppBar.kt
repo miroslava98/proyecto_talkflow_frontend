@@ -1,43 +1,43 @@
 package com.example.talkit_frontend.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 fun BtAppBar(
     onHomeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {}
+    onTalkFlowClick: () -> Unit = {}
 ) {
+    val selectedIndex = remember { mutableStateOf(0) }
+
+    val items = listOf(
+        Triple("Historial", Icons.Default.Home, onHomeClick),
+        Triple("Perfil", Icons.Default.Person, onProfileClick),
+        Triple("TalkFlow", Icons.Default.Settings, onTalkFlowClick)
+    )
+
     NavigationBar {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            IconButton(onClick = onHomeClick) {
-                Icon(Icons.Default.Home, contentDescription = "Inicio")
-            }
-            IconButton(onClick = onProfileClick) {
-                Icon(Icons.Default.Person, contentDescription = "Perfil")
-            }
-            IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Default.Settings, contentDescription = "Ajustes")
-            }
-            IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Default.Settings, contentDescription = "Perfil")
-            }
+        items.forEachIndexed { index, (label, icon, action) ->
+            NavigationBarItem(
+                icon = { Icon(imageVector = icon, contentDescription = label) },
+                label = { Text(label) },
+                selected = selectedIndex.value == index,
+                onClick = {
+                    selectedIndex.value = index
+                    action()
+                }
+            )
         }
     }
 }
