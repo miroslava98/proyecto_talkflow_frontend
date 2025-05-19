@@ -5,6 +5,7 @@ import retrofit2.http.Body
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import java.time.LocalDate
 
 interface ApiService {
     @Multipart
@@ -23,14 +24,17 @@ interface ApiService {
 
 }
 
-data class RegisterRequest(val username: String, val email: String, val password: String)
-
+data class RegisterRequest(
+    val nombre: String,
+    val email: String,
+    val fecha_nacimiento: String,
+    val password: String,
+    val avatar: String
+)
 
 data class LoginRequest(val email: String, val password: String)
 
 data class LoginResponse(val token: String, val nombre: String)
-
-
 
 
 // Modelo para la respuesta del backend

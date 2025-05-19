@@ -1,5 +1,8 @@
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.talkit_frontend.R
@@ -11,10 +14,12 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
-
 class VoiceRecorderViewModel : ViewModel() {
     private var mediaRecorder: android.media.MediaRecorder? = null
     private val apiService = RetrofitClient.apiService
+
+
+    var recognizedText by mutableStateOf("")
 
     // Estados para la UI
     private val _uploadState = MutableStateFlow<UploadState>(UploadState.Idle)
@@ -66,8 +71,8 @@ class VoiceRecorderViewModel : ViewModel() {
                 val response = apiService.uploadAudio(audioPart, languagePart)
                 if (response != null) {
                     if (response.status == "SUCCESS") {
-                        _uploadState.value =
-                            UploadState.Success(response.recognizedText ?: "Sin texto")
+                        recognizedText = response.recognizedText ?: "Sin texto"
+                        _uploadState.value = UploadState.Success(recognizedText)
                     } else {
                         _uploadState.value =
                             UploadState.Error(response.errorMessage ?: "Error desconocido")

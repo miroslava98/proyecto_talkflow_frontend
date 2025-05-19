@@ -12,17 +12,22 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -84,15 +89,20 @@ fun Mainscreen(navController: NavController) {
     var isRecording by remember { mutableStateOf(false) }
     var lastRecordedFile by remember { mutableStateOf<File?>(null) }
     var expanded by remember { mutableStateOf(false) }
+    var showTextField by remember { mutableStateOf(false) }
 
     val idiomas = listOf("es-ES", "en-US", "fr-FR", "de-DE", "it-IT", "bg-BGN")
+
 
     val uploadState by viewModel.uploadState.collectAsState()
     when (val state = uploadState) {
         is VoiceRecorderViewModel.UploadState.Success -> {
             LaunchedEffect(state) {
-                Toast.makeText(context, "Audio subido: ${state.recognizedText
-                }", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context, "Audio subido: ${
+                        state.recognizedText
+                    }", Toast.LENGTH_LONG
+                ).show()
             }
         }
 
@@ -228,10 +238,35 @@ fun Mainscreen(navController: NavController) {
                             isRecording = !isRecording
                         }
                     )
+                    //aqui es donde irá el texto transcrito
+                    val text = viewModel.recognizedText
 
-                    TranscribeTextIcon {
-                        Toast.makeText(context, "Transcribir texto", Toast.LENGTH_SHORT).show()
+                    TranscribeTextIcon(
+                        onClick = {
+                            if (text.isNotEmpty()) {
+                                showTextField = true
+                            }
+                        }
+                    )
+
+                    if (showTextField) {
+                        TextField(
+                            value = text,
+                            onValueChange = {},
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp)
+                                .padding(10.dp)
+                                .border(
+                                    width = 1.dp,
+                                    color = Color.Black,
+                                    shape = RoundedCornerShape(8.dp)
+                                ),
+                            readOnly = true
+                        )
                     }
+
+
                 }
             }
         }

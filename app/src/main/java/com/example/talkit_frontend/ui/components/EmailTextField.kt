@@ -23,8 +23,6 @@ fun EmailTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
-        modifier = Modifier.fillMaxWidth()
-            .padding(16.dp),
         singleLine = true,
         isError = false,
         // Puedes personalizar el borde con el parametro `colors`
