@@ -32,10 +32,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.talkit_frontend.R
 import com.example.talkit_frontend.ui.components.BtAppBar
 import com.example.talkit_frontend.ui.components.ProfileTextField
 import com.example.talkit_frontend.ui.components.SceneButton
+import com.example.talkit_frontend.ui.navigation.AppNavigation
 import com.example.talkit_frontend.ui.theme.Talkit_frontendTheme
 
 class UpdateProfileActivity : ComponentActivity() {
@@ -44,14 +47,14 @@ class UpdateProfileActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Talkit_frontendTheme {
-                UpdateProfileScreen()
+                AppNavigation()
             }
         }
     }
 }
 
 @Composable
-fun UpdateProfileScreen() {
+fun UpdateProfileScreen(navController: NavController) {
     val context = LocalContext.current
     var nombre by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -61,11 +64,7 @@ fun UpdateProfileScreen() {
 
     Scaffold(
         bottomBar = {
-            BtAppBar(
-                onHomeClick = {},
-                onProfileClick = { Toast.makeText(context, "Perfil", Toast.LENGTH_SHORT).show() },
-                onTalkFlowClick = {}
-            )
+            BtAppBar(navController)
         }
     ) { paddingValues ->
         Column(
@@ -160,6 +159,6 @@ fun UpdateProfileScreen() {
 @Composable
 fun UpdateProfileScreenPreview() {
     Talkit_frontendTheme {
-        UpdateProfileScreen()
+        UpdateProfileScreen(navController = rememberNavController())
     }
 }

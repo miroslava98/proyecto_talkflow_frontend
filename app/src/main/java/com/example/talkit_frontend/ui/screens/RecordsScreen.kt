@@ -24,7 +24,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.talkit_frontend.ui.components.BtAppBar
+import com.example.talkit_frontend.ui.navigation.AppNavigation
 import com.example.talkit_frontend.ui.theme.Talkit_frontendTheme
 
 class RecordsActivity : ComponentActivity() {
@@ -33,7 +36,7 @@ class RecordsActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Talkit_frontendTheme {
-                RecordsScreen()
+                AppNavigation()
             }
         }
 
@@ -42,7 +45,7 @@ class RecordsActivity : ComponentActivity() {
 
 
 @Composable
-fun RecordsScreen() {
+fun RecordsScreen(navController: NavController) {
     val sampleTranscriptions = listOf(
         "Restaurante - 02/05/2025 - 'Hola, ¿tienen mesa para dos?'",
         "Aeropuerto - 01/05/2025 - '¿Dónde está la puerta de embarque?'",
@@ -52,11 +55,7 @@ fun RecordsScreen() {
 
     Scaffold(
         bottomBar = {
-            BtAppBar(
-                onHomeClick = { /* Navegar al home */ },
-                onProfileClick = { /* Navegar al perfil */ },
-                onTalkFlowClick = { /* Navegar a ajustes */ }
-            )
+            BtAppBar(navController)
         }
     ) { innerPadding ->
         Column(
@@ -105,6 +104,6 @@ fun RecordsScreen() {
 @Composable
 fun RecordsScreenPreview() {
     Talkit_frontendTheme {
-        RecordsScreen()
+        RecordsScreen(navController = rememberNavController())
     }
 }

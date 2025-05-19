@@ -6,7 +6,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.talkit_frontend.ui.screens.LoginScreen
 import com.example.talkit_frontend.ui.screens.Mainscreen
+import com.example.talkit_frontend.ui.screens.RecordsScreen
 import com.example.talkit_frontend.ui.screens.RegisterScreen
+import com.example.talkit_frontend.ui.screens.UpdateProfileScreen
 
 @Composable
 fun AppNavigation() {
@@ -14,13 +16,21 @@ fun AppNavigation() {
     NavHost(navController = navController, startDestination = AppScreens.LoginScreen.route) {
 
         composable(route = AppScreens.LoginScreen.route) {
-            LoginScreen()
+            LoginScreen(navController)
         }
         composable(route = AppScreens.RegisterScreen.route) {
             RegisterScreen()
         }
         composable(route = AppScreens.MainScreen.route) {
-            Mainscreen()
+            Mainscreen(navController)
+        }
+
+        composable(route = AppScreens.RecordsScreen.route) {
+            RecordsScreen(navController)
+        }
+
+        composable(route = AppScreens.UpdateProfileScreen.route) {
+            UpdateProfileScreen(navController)
         }
 
     }
