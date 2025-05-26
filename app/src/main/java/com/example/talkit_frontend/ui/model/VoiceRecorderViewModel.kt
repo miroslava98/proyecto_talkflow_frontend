@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.talkit_frontend.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -14,6 +13,7 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+
 class VoiceRecorderViewModel : ViewModel() {
     private var mediaRecorder: android.media.MediaRecorder? = null
     private val apiService = RetrofitClient.apiService
@@ -33,15 +33,13 @@ class VoiceRecorderViewModel : ViewModel() {
     }
 
     fun startRecording(outputFile: File) {
-        viewModelScope.launch {
-            mediaRecorder = android.media.MediaRecorder().apply {
-                setAudioSource(android.media.MediaRecorder.AudioSource.MIC)
-                setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4)
-                setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC)
-                setOutputFile(outputFile.absolutePath)
-                prepare()
-                start()
-            }
+        mediaRecorder = android.media.MediaRecorder().apply {
+            setAudioSource(android.media.MediaRecorder.AudioSource.MIC)
+            setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4)
+            setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC)
+            setOutputFile(outputFile.absolutePath)
+            prepare()
+            start()
         }
     }
 
@@ -54,24 +52,35 @@ class VoiceRecorderViewModel : ViewModel() {
     }
 
     // Nueva función para subir el audio
-    fun uploadAudio(file: File, userId: String? = null, language: String) {
+    fun uploadAudio(file: File, userId: String? = null, language: String, scene: String) {
         viewModelScope.launch {
             _uploadState.value = UploadState.Loading
             try {
-                val requestFile = file.asRequestBody("audio/wav".toMediaTypeOrNull())
+                val requestFile = file.asRequestBody("audio/mp4".toMediaTypeOrNull())
+
                 val audioPart = MultipartBody.Part.createFormData(
-                    "file",  // Nombre del campo en el backend
+                    "file",
                     file.name,
                     requestFile
                 )
-                //val scenePart = scene.toRequestBody("text/plain".toMediaTypeOrNull())
+                val scenePart = scene.toRequestBody("text/plain".toMediaTypeOrNull())
                 val userIdPart = userId?.toRequestBody("text/plain".toMediaTypeOrNull())
                 val languagePart = language.toRequestBody("text/plain".toMediaTypeOrNull())
 
-                val response = apiService.uploadAudio(audioPart, languagePart)
+                val response = apiService.uploadAudio(
+                    file = audioPart,
+                    language = languagePart,
+                    scene = scenePart,
+                    userId = userIdPart
+                )
                 if (response != null) {
                     if (response.status == "SUCCESS") {
                         recognizedText = response.recognizedText ?: "Sin texto"
+                        Log.d(
+                            "API_RESPONSE",
+                            "Status: ${response.status}, Text: ${response.recognizedText}"
+                        )
+
                         _uploadState.value = UploadState.Success(recognizedText)
                     } else {
                         _uploadState.value =
@@ -86,25 +95,5 @@ class VoiceRecorderViewModel : ViewModel() {
         }
     }
 
-
-    fun uploadStaticAudio(context: Context, scene: String, language: String) {
-        val inputStream = context.resources.openRawResource(R.raw.harvard)
-        val tempFile = File(context.cacheDir, "harvard.wav")
-        Log.d("UPLOAD", "File exists: ${tempFile.exists()}, size: ${tempFile.length()}")
-
-
-        inputStream.use { input ->
-            tempFile.outputStream().use { output ->
-                input.copyTo(output)
-            }
-        }
-
-        viewModelScope.launch {
-            uploadAudio(
-                file = tempFile,
-                language = language
-            )
-        }
-    }
 
 }

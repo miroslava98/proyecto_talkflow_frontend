@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,28 +15,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun SceneButton(
+fun ConfirmationButton(
     text: String,
-    isSelected: Boolean = false,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
-
-    val backgroundColor = if (isSelected) Color(0xFF8A80FF) else Color.White.copy(alpha = 0.1f)
-    val textColor = if (isSelected) Color.White else Color.LightGray
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = Modifier
-            .padding(4.dp)        // Menor separación entre botones
-            .width(180.dp)        // Ancho reducido
-            .height(50.dp),       // Altura reducida
-        shape = RoundedCornerShape(8.dp), // Bordes menos redondeados
+            .padding(16.dp)
+            .fillMaxWidth()
+            .height(40.dp),
+        shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = backgroundColor,
-            contentColor = textColor
+            containerColor = Color.White,
+            contentColor = MaterialTheme.colorScheme.tertiary
         )
     ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge)
     }
 }
-
-

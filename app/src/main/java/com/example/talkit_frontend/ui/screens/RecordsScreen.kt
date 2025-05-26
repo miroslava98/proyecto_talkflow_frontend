@@ -18,16 +18,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.talkit_frontend.data.SessionManager
 import com.example.talkit_frontend.ui.components.BtAppBar
 import com.example.talkit_frontend.ui.navigation.AppNavigation
+import com.example.talkit_frontend.ui.navigation.AppScreens
 import com.example.talkit_frontend.ui.theme.Talkit_frontendTheme
 
 class RecordsActivity : ComponentActivity() {
@@ -43,9 +49,9 @@ class RecordsActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
 fun RecordsScreen(navController: NavController) {
+
     val sampleTranscriptions = listOf(
         "Restaurante - 02/05/2025 - 'Hola, ¿tienen mesa para dos?'",
         "Aeropuerto - 01/05/2025 - '¿Dónde está la puerta de embarque?'",
@@ -97,8 +103,8 @@ fun RecordsScreen(navController: NavController) {
             }
         }
     }
-
 }
+
 
 @Preview(showBackground = true)
 @Composable

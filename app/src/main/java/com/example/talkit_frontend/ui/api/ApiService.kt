@@ -9,38 +9,80 @@ import java.time.LocalDate
 
 interface ApiService {
     @Multipart
-    @POST("api/speech/transcribe") // Ajusta la ruta según tu backend
+    @POST("api/speech/transcribe")
     suspend fun uploadAudio(
         @Part file: MultipartBody.Part,
-        @Part("language") language: RequestBody, // Escena seleccionada (ej: "Restaurante")
+        @Part("scene") scene: RequestBody? = null,
+        @Part("language") language: RequestBody? = null, // Escena seleccionada (ej: "Restaurante")
         @Part("userId") userId: RequestBody? = null // Opcional: ID del usuario
-    ): SpeechRecognitionResponse // Define "ApiResponse" según la respuesta de tu backend
+    ): SpeechRecognitionResponse
 
     @POST("/talkflow/auth/signin")
     suspend fun loginUser(@Body request: LoginRequest): Response<LoginResponse>
 
-    @POST("api/auth/register")
+    @POST("talkflow/auth/signup")
     suspend fun register(@Body request: RegisterRequest): Response<Unit>
 
+    @POST("api/chat")
+    suspend fun chat(@Body request: ChatRequest): Response<OllamaResponse>
+
+    @POST("/api/tts/generateTTS")
+    suspend fun generateSpeech(@Body request: TextToSpeechRequest): Response<TextToSpeechResponse>
+
+
 }
+
+// Modelos para la respuestas del backend
 
 data class RegisterRequest(
     val nombre: String,
     val email: String,
-    val fecha_nacimiento: String,
+    val fecha_nacimiento: LocalDate,
     val password: String,
     val avatar: String
 )
 
 data class LoginRequest(val email: String, val password: String)
 
-data class LoginResponse(val token: String, val nombre: String)
+data class LoginResponse(
+    val token: String,
+    val nombre: String,
+    val email: String,
+    val avatar: String?,
+    val fechaNacimiento: String
 
+)
 
-// Modelo para la respuesta del backend
 data class SpeechRecognitionResponse(
     val recognizedText: String?,
     val status: String?,
-    val errorMessage: String? // URL del audio subido (opcional)
+    val errorMessage: String?
 )
+
+data class Message(val role: String, val content: String)
+
+data class ChatRequest(
+    val history: List<Message>,
+    val scenePrompt: String,
+    val language: String
+)
+
+data class OllamaResponse(
+    val response: String,
+    val audioBase64: String
+)
+
+data class TextToSpeechRequest(
+    val text: String,
+    val language: String
+)
+
+data class TextToSpeechResponse(
+    val generatedText: String?,
+    val audioBase64: String?,
+    val errorMessage: String?
+
+)
+
+
 

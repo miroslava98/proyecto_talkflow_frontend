@@ -1,8 +1,11 @@
-import android.icu.text.SimpleDateFormat
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import com.google.android.material.datepicker.MaterialDatePicker
@@ -10,19 +13,20 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BirthDatePicker(
-    selectedDate: String,
-    onDateSelected: (String) -> Unit
+    selectedDate: LocalDate?,
+    onDateSelected: (LocalDate) -> Unit
 ) {
     val context = LocalContext.current
     val isInEditMode = LocalView.current.isInEditMode
     val activity = if (!isInEditMode) context as? AppCompatActivity else null
-    Button(
+
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+    OutlinedButton(
         onClick = {
             activity?.let {
                 val datePicker = MaterialDatePicker.Builder.datePicker()
@@ -32,17 +36,15 @@ fun BirthDatePicker(
                 datePicker.show(it.supportFragmentManager, "DATE_PICKER")
 
                 datePicker.addOnPositiveButtonClickListener { millis ->
-                    val calendar = Calendar.getInstance()
-                    calendar.timeInMillis = millis
-                    val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                    val formattedDate = formatter.format(calendar.time)
-                    onDateSelected(formattedDate)
+                    val localDate = Instant.ofEpochMilli(millis)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                    onDateSelected(localDate)
                 }
             }
-        }
+        },
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Text(text = if (selectedDate.isEmpty()) "Seleccionar Fecha" else selectedDate)
+        Text(text = selectedDate?.format(formatter) ?: "Seleccionar Fecha")
     }
 }
-
-

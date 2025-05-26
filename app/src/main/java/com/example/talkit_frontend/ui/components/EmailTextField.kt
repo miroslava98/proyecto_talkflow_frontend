@@ -25,14 +25,20 @@ fun EmailTextField(
         label = { Text(label) },
         singleLine = true,
         isError = false,
-        // Puedes personalizar el borde con el parametro `colors`
-        colors = TextFieldDefaults.outlinedTextFieldColors(
-            focusedBorderColor = MaterialTheme.colorScheme.primary, // Color cuando está enfocado
-            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), // Color cuando no está enfocado
-            focusedLabelColor = MaterialTheme.colorScheme.primary, // Color del label cuando está enfocado
-            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f) // Color del label cuando no está enfocado
-        )
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            focusedLabelColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            focusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+            focusedIndicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+            unfocusedIndicatorColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+            cursorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
 
+        )
     )
+
+
 }
 

@@ -47,7 +47,9 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0") // Para ver logs de las pet
     implementation("com.google.code.gson:gson:2.8.8") // o la última versión disponible
     implementation("com.squareup.retrofit2:converter-gson:2.9.0") // o la última versión disponible
-    implementation ("androidx.compose.material:material-icons-extended:1.5.4")
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
+    implementation("androidx.datastore:datastore-preferences:1.1.0")
+    // implementation("com.github.JorenSix:TarsosDSP:2.4")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
