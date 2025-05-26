@@ -1,11 +1,15 @@
 package com.example.talkit_frontend.ui.screens
 
+import AvatarPicker
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
@@ -53,6 +58,7 @@ import com.example.talkit_frontend.ui.navigation.AppNavigation
 import com.example.talkit_frontend.ui.theme.Talkit_frontendTheme
 
 class UpdateProfileActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -85,6 +91,7 @@ fun UpdateProfileScreen(navController: NavController) {
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var avatarUri by remember { mutableStateOf<Uri?>(null) }
 
     LaunchedEffect(userName, userEmail, userFechaNac, userAvatar) {
         nombre = userName ?: ""
@@ -101,11 +108,12 @@ fun UpdateProfileScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFFB2A1FF),
-                            Color(0xFF8A80FF)
+                            Color(0xFF4A5C85), // Más claro que #34446C
+                            Color(0xFFAEB2CB)  // Base
                         )
                     )
                 )
@@ -123,15 +131,12 @@ fun UpdateProfileScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Imagen de perfil
-                Image(
-
-                    painter = painterResource(id = R.drawable.avatar_prueba), // usa tu recurso
-                    contentDescription = "Foto de perfil",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .background(Color.White)
+                AvatarPicker(
+                    avatarUri = avatarUri,
+                    onAvatarClick = {
+                        // Lógica para abrir selector de imagen
+                    },
+                    onAvatarSelected = { uri -> avatarUri = uri }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))

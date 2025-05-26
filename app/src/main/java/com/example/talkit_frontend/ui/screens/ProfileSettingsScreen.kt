@@ -1,10 +1,12 @@
 package com.example.talkit_frontend.ui.screens
 
+import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -64,6 +66,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 class ProfileSettingsActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -97,7 +100,12 @@ fun ProfileSettingsScreen(navController: NavController) {
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(
-                    Brush.verticalGradient(listOf(Color(0xFFB2A1FF), Color(0xFF8A80FF)))
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF4A5C85), // Más claro que #34446C
+                            Color(0xFFAEB2CB)  // Base
+                        )
+                    )
                 )
                 .padding(horizontal = 16.dp)
                 .verticalScroll(scrollState),
@@ -183,7 +191,7 @@ fun ProfileSettingsScreen(navController: NavController) {
 fun ProfileSection(modifier: Modifier = Modifier, userName: String, userEmail: String) {
     Column(
         modifier = modifier
-            .background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
         Text(
@@ -210,7 +218,9 @@ fun SettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        content()
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            content()
+        }
     }
 }
 

@@ -6,6 +6,7 @@ import MicIconToggle
 import OllamaResponse
 import RetrofitClient
 import SpeechRecognitionResponse
+import TranscripcionDto
 import VoiceRecorderViewModel
 import android.Manifest
 import android.content.pm.PackageManager
@@ -68,14 +69,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.talkit_frontend.R
+import com.example.talkit_frontend.data.SessionManager
 import com.example.talkit_frontend.ui.components.ConfirmationButton
 import com.example.talkit_frontend.ui.navigation.AppNavigation
 import com.example.talkit_frontend.ui.theme.Talkit_frontendTheme
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.Response
+import okhttp3.internal.userAgent
 import java.io.File
 
 class ChatScreenActivity : ComponentActivity() {
@@ -101,7 +105,7 @@ class ChatScreenActivity : ComponentActivity() {
 
 data class AssistantMessage(val text: String, val audioBase64: String?)
 
-fun playBase64Audio(base64: String, context: android.content.Context) {
+fun playBase64Audio(base64: String, context: android.content.Context, onComplete: () -> Unit) {
     try {
         Log.d("AudioPlayback", "Base64 content: $base64")
         Log.d("AudioPlayback", "Base64 length: ${base64.length}")
@@ -109,7 +113,10 @@ fun playBase64Audio(base64: String, context: android.content.Context) {
         Log.d("AudioPlayback", "Audio bytes length: ${audioBytes.size}")
         val tempFile = File.createTempFile("audio", ".mp3", context.cacheDir)
         tempFile.writeBytes(audioBytes)
-        Log.d("AudioPlayback", "Archivo creado en: ${tempFile.absolutePath}, tamaño: ${tempFile.length()}")
+        Log.d(
+            "AudioPlayback",
+            "Archivo creado en: ${tempFile.absolutePath}, tamaño: ${tempFile.length()}"
+        )
 
         val mediaPlayer = MediaPlayer()
         mediaPlayer.setDataSource(tempFile.absolutePath)
@@ -118,6 +125,7 @@ fun playBase64Audio(base64: String, context: android.content.Context) {
         }
         mediaPlayer.prepareAsync()
         mediaPlayer.setOnCompletionListener {
+            onComplete()
             it.release()
             tempFile.delete()
         }
@@ -138,8 +146,8 @@ fun playBase64Audio(base64: String, context: android.content.Context) {
 @Composable
 fun ChatScreen(
     scene: String,
-    languageChat: String,
-    languageSpoken: String,
+    chatLanguage: String,
+    userLanguage: String,
     navController: NavController
 ) {
     val context = LocalContext.current
@@ -151,6 +159,11 @@ fun ChatScreen(
     var messages by remember { mutableStateOf(listOf<Any>()) }
     var chosenScene = scene.lowercase()
     var isLoading by remember { mutableStateOf(false) }
+    var isPlaying by remember { mutableStateOf(false) }
+    val sessionManager = remember { SessionManager(context) }
+
+    val coroutineScope = rememberCoroutineScope()
+
 
     val uploadState by viewModel.uploadState.collectAsState()
 
@@ -168,6 +181,8 @@ fun ChatScreen(
 
             else -> {}
         }
+
+
     }
 
     Scaffold(
@@ -188,12 +203,15 @@ fun ChatScreen(
                 ) {
                     listOf(
                         "Escena: $scene",
-                        "Idioma: $languageChat",
-                        "Voz: $languageSpoken"
+                        "Idioma: $chatLanguage",
+                        "Voz: $userLanguage"
                     ).forEach { label ->
                         Box(
                             modifier = Modifier
-                                .background(Color.White.copy(alpha = 0.15f), shape = MaterialTheme.shapes.small)
+                                .background(
+                                    Color.White.copy(alpha = 0.15f),
+                                    shape = MaterialTheme.shapes.small
+                                )
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
@@ -207,9 +225,7 @@ fun ChatScreen(
         }
 
 
-
     ) { innerPadding ->
-        val coroutineScope = rememberCoroutineScope()
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -280,9 +296,14 @@ fun ChatScreen(
                                     message.audioBase64?.let { audio ->
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Button(
-                                            onClick = { playBase64Audio(audio, context) }
+                                            onClick = {
+                                                isPlaying = true
+                                                playBase64Audio(audio, context) {
+                                                    isPlaying = false
+                                                }
+                                            }
                                         ) {
-                                            Text("🔊 Escuchar")
+                                            Text(if (isPlaying) "🔊 Reproduciendo..." else "🔊 Escuchar")
                                         }
                                     }
                                 }
@@ -293,148 +314,181 @@ fun ChatScreen(
             }
 
             Column(modifier = Modifier.fillMaxWidth()) {
-                Row(
+
+                // Mostrar input de texto
+                TextField(
+                    value = inputText,
+                    onValueChange = { inputText = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp),
+                        .padding(bottom = 8.dp)
+                        .heightIn(min = 56.dp),
+                    placeholder = { Text("Escribe tu mensaje") },
+                    enabled = !(isRecording || isLoading)
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Mostrar input de texto
-                    TextField(
-                        value = inputText,
-                        onValueChange = { inputText = it },
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(56.dp),
-                        placeholder = { Text("Escribe tu mensaje") },
-                        enabled = !(isRecording || isLoading)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)  // Tamaño fijo para el botón
-                    ) {
-                        // 🎙️ Grabación de voz
-                        MicIconToggle(
-                            isRecording = isRecording,
-                            onClick = {
-                                if (isLoading) return@MicIconToggle
-                                coroutineScope.launch {
-                                    if (isRecording) {
-                                        viewModel.stopRecording()
-                                        lastRecordedFile?.let { file ->
-                                            viewModel.uploadAudio(
-                                                file,
-                                                scene = scene,
-                                                language = languageSpoken
-                                            )
-                                        }
-                                        Toast.makeText(
-                                            context,
-                                            "Grabación detenida",
-                                            Toast.LENGTH_SHORT
+                    // 🎙️ Grabación de voz
+                    MicIconToggle(
+                        isRecording = isRecording,
+                        onClick = {
+                            if (isLoading) return@MicIconToggle
+                            coroutineScope.launch {
+                                if (isRecording) {
+                                    viewModel.stopRecording()
+                                    lastRecordedFile?.let { file ->
+                                        viewModel.uploadAudio(
+                                            file,
+                                            scene = scene,
+                                            language = userLanguage
                                         )
-                                            .show()
-                                    } else {
-                                        //INICIAR GRABACIÓN
-                                        val outputFile = File(
-                                            context.filesDir,
-                                            "recording_${System.currentTimeMillis()}.mp4"
-                                        )
-                                        lastRecordedFile = outputFile
-                                        viewModel.startRecording(outputFile)
-                                        Toast.makeText(
-                                            context,
-                                            "Grabando...",
-                                            Toast.LENGTH_SHORT
-                                        )
-                                            .show()
                                     }
-                                    isRecording = !isRecording
-                                }
-                            },
-                            enabled = !isLoading
-                        )
-                    }
-
-                }
-                // ✉️ Send button
-                ConfirmationButton(
-                    text = "Enviar",
-                    enabled = !(isRecording || isLoading),
-                    onClick = {
-                        coroutineScope.launch {
-                            if (inputText.isNotBlank()) {
-                                isLoading = true
-                                val truncatedInput = inputText.take(500)
-                                val userMessage = "🧑 Tú: $truncatedInput"
-
-                                val historyMessages = messages.mapNotNull {
-                                    when (it) {
-                                        is String -> {
-                                            when {
-                                                it.startsWith("🧑") -> Message(
-                                                    "user",
-                                                    it.removePrefix("🧑 Tú: ")
-                                                )
-
-                                                it.startsWith("🤖") -> Message(
-                                                    "assistant",
-                                                    it.removePrefix("🤖 Asistente: ")
-                                                )
-
-                                                else -> null
-                                            }
-                                        }
-
-                                        is AssistantMessage -> Message("assistant", it.text)
-                                        else -> null
-                                    }
-                                }
-
-                                val request = ChatRequest(
-                                    scenePrompt = chosenScene,
-                                    language = languageChat,
-                                    history = historyMessages + Message("user", inputText)
-                                )
-
-                                try {
-                                    val response = RetrofitClient.apiService.chat(request)
-                                    if (response.isSuccessful) {
-                                        val body = response.body()
-                                        val reply = body?.response ?: "Respuesta vacía"
-                                        val audio = body?.audioBase64
-                                        if (audio != null && audio.matches(Regex("^[A-Za-z0-9+/=\\r\\n]+$"))) {
-                                            // Reproducir audio
-                                            playBase64Audio(audio, context)
-                                        }else{
-                                            Toast.makeText(context, "Audio no válido para reproducir", Toast.LENGTH_SHORT).show()
-                                        }
-                                        messages = messages + listOf(
-                                            userMessage,
-                                            AssistantMessage(reply, audio)
-                                        )
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Error: ${response.code()}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                } catch (e: Exception) {
                                     Toast.makeText(
                                         context,
-                                        "Excepción: ${e.message}",
+                                        "Grabación detenida",
                                         Toast.LENGTH_SHORT
-                                    ).show()
-                                } finally {
-                                    isLoading = false
-                                    inputText = ""
+                                    )
+                                        .show()
+                                } else {
+                                    //INICIAR GRABACIÓN
+                                    val outputFile = File(
+                                        context.filesDir,
+                                        "recording_${System.currentTimeMillis()}.mp4"
+                                    )
+                                    lastRecordedFile = outputFile
+                                    viewModel.startRecording(outputFile)
+                                    Toast.makeText(
+                                        context,
+                                        "Grabando...",
+                                        Toast.LENGTH_SHORT
+                                    )
+                                        .show()
+                                }
+                                isRecording = !isRecording
+                            }
+                        },
+                        enabled = !isLoading
+                    )
+
+
+                    // ✉️ Send button
+                    ConfirmationButton(
+                        text = "Enviar",
+                        enabled = !(isRecording || isLoading),
+                        onClick = {
+                            coroutineScope.launch {
+                                if (inputText.isNotBlank()) {
+                                    isLoading = true
+                                    val truncatedInput = inputText.take(500)
+                                    val userMessage = "🧑 Tú: $truncatedInput"
+
+                                    val historyMessages = messages.mapNotNull {
+                                        when (it) {
+                                            is String -> {
+                                                when {
+                                                    it.startsWith("🧑") -> Message(
+                                                        "user",
+                                                        it.removePrefix("🧑 Tú: ")
+                                                    )
+
+                                                    it.startsWith("🤖") -> Message(
+                                                        "assistant",
+                                                        it.removePrefix("🤖 Asistente: ")
+                                                    )
+
+                                                    else -> null
+                                                }
+                                            }
+
+                                            is AssistantMessage -> Message("assistant", it.text)
+                                            else -> null
+                                        }
+                                    }
+
+                                    val request = ChatRequest(
+                                        scenePrompt = chosenScene,
+                                        language = chatLanguage,
+                                        history = historyMessages + Message("user", inputText)
+                                    )
+
+                                    try {
+                                        val response = RetrofitClient.apiService.chat(request)
+                                        if (response.isSuccessful) {
+                                            val body = response.body()
+                                            val reply = body?.response ?: "Respuesta vacía"
+                                            val audio = body?.audioBase64
+                                            if (audio != null && audio.matches(Regex("^[A-Za-z0-9+/=\\r\\n]+$"))) {
+
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Audio no válido para reproducir",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                            messages = messages + listOf(
+                                                userMessage,
+                                                AssistantMessage(reply, audio)
+                                            )
+
+
+                                            val token = sessionManager.fetchAuthToken()
+                                            val email = sessionManager.userEmail.firstOrNull()
+                                            if (email != null) {
+                                                val transcripcion = TranscripcionDto(
+                                                    idioma = chatLanguage,
+                                                    textoUser = inputText,
+                                                    textoChat = reply,
+                                                    userEmail = email
+                                                )
+
+                                                coroutineScope.launch {
+                                                    try {
+                                                        val saveResponse =
+                                                            RetrofitClient.apiService.saveTranscripcion(
+                                                                transcripcion
+                                                            )
+                                                        if (!saveResponse.isSuccessful) {
+                                                            Log.e(
+                                                                "ChatScreen",
+                                                                "Error guardando transcripción: ${saveResponse.code()}"
+                                                            )
+                                                        }
+                                                    } catch (e: Exception) {
+                                                        Log.e(
+                                                            "ChatScreen",
+                                                            "Excepción guardando transcripción: ${e.message}"
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                "Error: ${response.code()}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        Toast.makeText(
+                                            context,
+                                            "Excepción: ${e.message}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } finally {
+                                        isLoading = false
+                                        inputText = ""
+                                    }
                                 }
                             }
                         }
-                    }
-                )
+                    )
+                }
             }
 
 
@@ -448,8 +502,8 @@ fun ChatScreenPreview() {
     Talkit_frontendTheme {
         ChatScreen(
             scene = "",
-            languageChat = "",
-            languageSpoken = "",
+            chatLanguage = "",
+            userLanguage = "",
             navController = rememberNavController()
         )
     }

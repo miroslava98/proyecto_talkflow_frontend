@@ -49,6 +49,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0") // o la última versión disponible
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
     implementation("androidx.datastore:datastore-preferences:1.1.0")
+    implementation("io.coil-kt:coil-compose:2.4.0")
     // implementation("com.github.JorenSix:TarsosDSP:2.4")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

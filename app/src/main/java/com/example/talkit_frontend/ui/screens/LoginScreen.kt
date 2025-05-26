@@ -1,11 +1,14 @@
 package com.example.talkit_frontend.ui.screens
 
 import LoginRequest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.FilledTonalButton
@@ -31,12 +35,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.talkit_frontend.R
 import com.example.talkit_frontend.data.SessionManager
 import com.example.talkit_frontend.ui.components.ConfirmationButton
 import com.example.talkit_frontend.ui.components.EmailTextField
@@ -50,6 +56,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class LoginActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -101,7 +108,12 @@ fun LoginScreen(
 
                         // Aquí podrías guardar el token en SharedPreferences o DataStore
                         sessionManager.saveAuthToken(token)
-                        sessionManager.saveUserData(userName, userEmail, userFechaNac ?: "", userAvatar ?: "")
+                        sessionManager.saveUserData(
+                            userName,
+                            userEmail,
+                            (userFechaNac ?: "").toString(),
+                            userAvatar ?: ""
+                        )
 
                         // Navegamos a la pantalla principal en el hilo principal
                         withContext(Dispatchers.Main) {
@@ -127,14 +139,15 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF4A5C85), // Más claro que #34446C
-                            Color(0xFF34446C)  // Base
-                        )
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF4A5C85), // Más claro que #34446C
+                        Color(0xFFAEB2CB)  // Base
                     )
-                ),
+                )
+            ),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -146,7 +159,14 @@ fun LoginScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
 
+                painter = painterResource(id = R.drawable.launcher), // 🖼 tu logo
+                contentDescription = "Logo de la app",
+                modifier = Modifier
+                    .height(100.dp)
+                    .padding(bottom = 24.dp)
+            )
             EmailTextField(value = correo,
                 onValueChange = { correo = it })
             Spacer(

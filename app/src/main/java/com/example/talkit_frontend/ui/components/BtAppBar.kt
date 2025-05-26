@@ -18,28 +18,33 @@ import com.example.talkit_frontend.ui.navigation.AppScreens
 
 @Composable
 fun BtAppBar(navController: NavController) {
-    val selectedIndex = remember { mutableStateOf(0) }
+    val navBackStackEntry = navController.currentBackStackEntry
+    val currentRoute = navBackStackEntry?.destination?.route
 
     val items = listOf(
         Triple("TalkFlow", Icons.Default.Home, AppScreens.MainScreen.route),
         Triple("Historial", Icons.Default.Save, AppScreens.RecordsScreen.route),
         Triple("Perfil", Icons.Default.Person2, AppScreens.ProfileSettingsScreen.route)
+
     )
 
     NavigationBar {
-        items.forEachIndexed { index, (label, icon, route) ->
+        items.forEach { (label, icon, route) ->
+            val isSelected = currentRoute == route
+
             NavigationBarItem(
                 icon = { Icon(imageVector = icon, contentDescription = label) },
                 label = { Text(label) },
-                selected = selectedIndex.value == index,
+                selected = isSelected,
                 onClick = {
-                    selectedIndex.value = index
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
+                    if (currentRoute != route) {
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
                     }
                 }
             )

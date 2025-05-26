@@ -1,7 +1,6 @@
 package com.example.talkit_frontend.ui.navigation
 
 import android.os.Build
-import android.window.SplashScreen
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

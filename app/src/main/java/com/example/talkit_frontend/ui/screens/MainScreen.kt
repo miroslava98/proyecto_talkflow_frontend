@@ -72,7 +72,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
 fun Mainscreen(navController: NavController) {
 
@@ -93,7 +92,6 @@ fun Mainscreen(navController: NavController) {
         "Italiano" to "it-IT",
         "Búlgaro" to "bg-BG"
     )
-
 
     Scaffold(bottomBar = { BtAppBar(navController) }) { innerPadding ->
         Column(
@@ -169,7 +167,7 @@ fun Mainscreen(navController: NavController) {
                     selectedOption = selectedSpokenLanguageName,
                     onOptionSelected = { name ->
                         selectedSpokenLanguageName = name
-                        selectedSpokenLanguageCode = idiomas[name] ?: "en-US"
+                        selectedSpokenLanguageCode = idiomas[name] ?: "es-ES"
                     }
                 )
 
@@ -178,7 +176,7 @@ fun Mainscreen(navController: NavController) {
                 ConfirmationButton(
                     text = "Comenzar",
                     onClick = {
-                        if (selectedScene?.isNotBlank() == true && selectedChatLanguageCode.isNotBlank()) {
+                        if (selectedScene?.isNotBlank() == true && selectedChatLanguageCode.isNotBlank() && selectedSpokenLanguageCode.isNotBlank()) {
                             Toast.makeText(
                                 context,
                                 "Escena: $selectedScene",

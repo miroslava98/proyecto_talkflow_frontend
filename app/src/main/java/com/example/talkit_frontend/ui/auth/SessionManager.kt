@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "session_prefs")
@@ -60,5 +61,13 @@ class SessionManager(private val context: Context) {
         context.dataStore.edit { prefs ->
             prefs.clear() // Esto borra TODO lo guardado
         }
+    }
+
+    suspend fun fetchAuthToken(): String? {
+        return authToken.first()
+    }
+
+    suspend fun fetchUserEmail(): String? {
+        return userEmail.first()
     }
 }
