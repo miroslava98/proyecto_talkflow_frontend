@@ -52,6 +52,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -105,40 +106,37 @@ class ChatScreenActivity : ComponentActivity() {
 
 data class AssistantMessage(val text: String, val audioBase64: String?)
 
-fun playBase64Audio(base64: String, context: android.content.Context, onComplete: () -> Unit) {
-    try {
-        Log.d("AudioPlayback", "Base64 content: $base64")
-        Log.d("AudioPlayback", "Base64 length: ${base64.length}")
+fun playBase64Audio(
+    base64: String,
+    context: android.content.Context,
+    onComplete: () -> Unit
+): Pair<MediaPlayer, File>? {
+    return try {
         val audioBytes = Base64.decode(base64, Base64.DEFAULT)
-        Log.d("AudioPlayback", "Audio bytes length: ${audioBytes.size}")
         val tempFile = File.createTempFile("audio", ".mp3", context.cacheDir)
         tempFile.writeBytes(audioBytes)
-        Log.d(
-            "AudioPlayback",
-            "Archivo creado en: ${tempFile.absolutePath}, tamaño: ${tempFile.length()}"
-        )
 
-        val mediaPlayer = MediaPlayer()
-        mediaPlayer.setDataSource(tempFile.absolutePath)
-        mediaPlayer.setOnPreparedListener {
-            it.start()
+        val mediaPlayer = MediaPlayer().apply {
+            setDataSource(tempFile.absolutePath)
+            setOnPreparedListener { it.start() }
+            setOnCompletionListener {
+                onComplete()
+                it.release()
+                tempFile.delete()
+            }
+            setOnErrorListener { mp, _, _ ->
+                mp.release()
+                tempFile.delete()
+                Toast.makeText(context, "Error reproduciendo audio", Toast.LENGTH_SHORT).show()
+                true
+            }
+            prepareAsync()
         }
-        mediaPlayer.prepareAsync()
-        mediaPlayer.setOnCompletionListener {
-            onComplete()
-            it.release()
-            tempFile.delete()
-        }
-        mediaPlayer.setOnErrorListener { mp, what, extra ->
-            mp.release()
-            tempFile.delete()
-            Toast.makeText(context, "Error reproduciendo audio", Toast.LENGTH_SHORT).show()
-            true
-        }
-
+        mediaPlayer to tempFile
     } catch (e: Exception) {
         e.printStackTrace()
         Toast.makeText(context, "Error al reproducir audio", Toast.LENGTH_SHORT).show()
+        null
     }
 }
 
@@ -159,8 +157,13 @@ fun ChatScreen(
     var messages by remember { mutableStateOf(listOf<Any>()) }
     var chosenScene = scene.lowercase()
     var isLoading by remember { mutableStateOf(false) }
-    var isPlaying by remember { mutableStateOf(false) }
+    val playingStates = remember { mutableStateMapOf<Int, Boolean>() }
     val sessionManager = remember { SessionManager(context) }
+
+
+    var currentMediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    var currentTempFile by remember { mutableStateOf<File?>(null) }
+    var currentPlayingIndex by remember { mutableStateOf<Int?>(null) }
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -274,7 +277,7 @@ fun ChatScreen(
                         }
 
                         is AssistantMessage -> {
-
+                            val isPlaying = playingStates[index] ?: false
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -297,13 +300,37 @@ fun ChatScreen(
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Button(
                                             onClick = {
-                                                isPlaying = true
-                                                playBase64Audio(audio, context) {
-                                                    isPlaying = false
+                                                if (isPlaying) {
+                                                    // Si está reproduciendo, pausar y limpiar
+                                                    currentMediaPlayer?.let {
+                                                        if (it.isPlaying) it.pause()
+                                                        else it.start()
+                                                    }
+                                                } else {
+                                                    // Parar audio anterior
+                                                    currentMediaPlayer?.release()
+                                                    currentTempFile?.delete()
+                                                    currentMediaPlayer = null
+                                                    currentTempFile = null
+                                                    currentPlayingIndex = null
+
+                                                    // Iniciar nuevo audio
+                                                    val pair = playBase64Audio(audio, context) {
+                                                        currentPlayingIndex = null
+                                                    }
+                                                    pair?.let { (mp, file) ->
+                                                        currentMediaPlayer = mp
+                                                        currentTempFile = file
+                                                        currentPlayingIndex = index
+                                                    }
                                                 }
                                             }
                                         ) {
-                                            Text(if (isPlaying) "🔊 Reproduciendo..." else "🔊 Escuchar")
+                                            Text(
+                                                if (isPlaying && currentMediaPlayer?.isPlaying == true) "⏸️ Pausar"
+                                                else if (isPlaying) "▶️ Reanudar"
+                                                else "🔊 Escuchar"
+                                            )
                                         }
                                     }
                                 }

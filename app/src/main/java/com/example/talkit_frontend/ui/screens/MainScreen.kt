@@ -183,7 +183,7 @@ fun Mainscreen(navController: NavController) {
                                 Toast.LENGTH_SHORT
                             )
                                 .show()
-                            navController.navigate("chat/${selectedScene}/${selectedChatLanguageCode}/${selectedSpokenLanguageCode}")
+                            navController.navigate("chat/${selectedScene}/${selectedChatLanguageName}/${selectedSpokenLanguageCode}")
                         } else {
                             Toast.makeText(context, "Selecciona una escena", Toast.LENGTH_SHORT)
                                 .show()

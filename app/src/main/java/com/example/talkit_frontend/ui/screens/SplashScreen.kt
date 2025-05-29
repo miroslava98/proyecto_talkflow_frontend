@@ -158,7 +158,7 @@ fun LogoScreen() {
         contentAlignment = Alignment.Center
     ) {
         Image(
-            painter = painterResource(R.drawable.ic_launcher_background), // Usa el nombre correcto de tu recurso
+            painter = painterResource(R.drawable.launcher), // Usa el nombre correcto de tu recurso
             contentDescription = "Logo TalkFlow",
             modifier = Modifier
                 .scale(scale)
